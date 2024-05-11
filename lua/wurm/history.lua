@@ -77,13 +77,15 @@ function M:navigate(win, direction)
 end
 
 ---@param win integer
-function M:prev(win)
-	self:navigate(win, -1)
+---@param direction integer?
+function M:prev(win, direction)
+	self:navigate(win, -(math.max(direction or 1, 1)))
 end
 
 ---@param win integer
-function M:next(win)
-	self:navigate(win, 1)
+---@param direction integer?
+function M:next(win, direction)
+	self:navigate(win, math.max(direction or 1, 1))
 end
 
 return M
