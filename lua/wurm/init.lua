@@ -1,8 +1,8 @@
 local M = {}
 
----@param opts wurm.PartialConfig
+---@param opts wurm.PartialConfig?
 function M.setup(opts)
-	require("wurm.config").setup(opts)
+	require("wurm.config").setup(opts or {})
 	require("wurm.autocmds").setup()
 
 	vim.api.nvim_create_user_command("WurmPrev", function()

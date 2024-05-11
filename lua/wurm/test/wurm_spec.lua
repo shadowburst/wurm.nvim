@@ -1,5 +1,6 @@
 describe("wurm", function()
 	before_each(function()
+		require("wurm").setup()
 		require("wurm.history"):clear()
 	end)
 
@@ -12,11 +13,11 @@ describe("wurm", function()
 
 		local win = 0
 
-		history:push(win, 0)
-		assert.are.same({ 0 }, history.windows[win])
+		history:push(win, "foo")
+		assert.are.same({ "foo" }, history.files[win])
 
-		history:push(win, 1)
-		assert.are.same({ 0, 1 }, history.windows[win])
+		history:push(win, "bar")
+		assert.are.same({ "foo", "bar" }, history.files[win])
 	end)
 
 	it("can remove from history", function()
@@ -24,35 +25,39 @@ describe("wurm", function()
 
 		local win = 0
 
-		history:push(win, 0)
-		history:push(win, 1)
-		history:remove(win, 1)
+		history:push(win, "foo")
+		history:push(win, "bar")
+		history:remove(win, "bar")
 
-		assert.are.same({ 0 }, history.windows[win])
+		assert.are.same({ "foo" }, history.files[win])
 	end)
 
 	it("can navigate history", function()
 		local history = require("wurm.history")
 
 		local win = vim.api.nvim_get_current_win()
-		local buffers = {}
+		local files = {}
 		for i = 1, 10, 1 do
-			buffers[i] = vim.api.nvim_create_buf(true, false)
-			history:push(win, buffers[i])
+			files[i] = "file-" .. i
+			history:push(win, files[i])
 		end
 
-		vim.api.nvim_win_set_buf(win, buffers[10])
+		vim.cmd("edit " .. files[10])
+		assert.are.same(files[10], vim.fn.expand("%:."))
 
 		history:navigate(win, 0)
-		assert.are.same(buffers[10], vim.api.nvim_win_get_buf(win))
+		assert.are.same(files[10], vim.fn.expand("%:."))
 
 		history:prev(win)
-		assert.are.same(buffers[9], vim.api.nvim_win_get_buf(win))
+		assert.are.same(files[9], vim.fn.expand("%:."))
 
 		history:next(win)
-		assert.are.same(buffers[10], vim.api.nvim_win_get_buf(win))
+		assert.are.same(files[10], vim.fn.expand("%:."))
 
 		history:next(win)
-		assert.are.same(buffers[1], vim.api.nvim_win_get_buf(win))
+		assert.are.same(files[1], vim.fn.expand("%:."))
+
+		history:prev(win)
+		assert.are.same(files[10], vim.fn.expand("%:."))
 	end)
 end)

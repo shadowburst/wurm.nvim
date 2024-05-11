@@ -1,54 +1,64 @@
+---@class wurm.Config
+local Config = require("wurm.config").options
+local Utils = require("wurm.utils")
+
 ---@class wurm.History
 ---@field paused boolean
----@field windows table
+---@field files table
 local M = {
 	paused = false,
-	windows = {},
+	files = {},
 }
 
 ---@param win integer
----@param buf integer
-function M:push(win, buf)
+---@param file string filepath relative to the cwd
+function M:push(win, file)
 	if self.paused then
 		return
 	end
 
-	local history = vim.tbl_filter(function(b)
-		return b ~= buf
-	end, self.windows[win] or {})
+	local history = vim.tbl_filter(function(f)
+		return f ~= file
+	end, self.files[win] or {})
 
-	table.insert(history, buf)
+	table.insert(history, file)
 
-	self.windows[win] = history
+	if #history > Config.max_history then
+		table.remove(history, 1)
+	end
+
+	self.files[win] = history
 end
 
 ---@param win integer
----@param buf integer
-function M:remove(win, buf)
-	self.windows[win] = vim.tbl_filter(function(b)
-		return b ~= buf
-	end, self.windows[win] or {})
+---@param file string filepath relative to the cwd
+function M:remove(win, file)
+	self.files[win] = vim.tbl_filter(function(f)
+		return f ~= file
+	end, self.files[win] or {})
 end
 
 ---@param win? integer
 function M:clear(win)
 	if win == nil then
-		self.windows = {}
+		self.files = {}
 	else
-		self.windows[win] = nil
+		self.files[win] = nil
 	end
 end
 
 ---@param win integer
 ---@param direction integer
 function M:navigate(win, direction)
-	local history = self.windows[win] or {}
+	local history = self.files[win] or {}
 
 	if #history == 0 then
 		return
 	end
 
-	local index = require("wurm.utils").tbl_index(vim.api.nvim_win_get_buf(win), history)
+	local file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win)), ":.")
+
+	local index = Utils.tbl_index(file, history)
 
 	if index == nil then
 		return
@@ -62,7 +72,7 @@ function M:navigate(win, direction)
 	end
 
 	self.paused = true
-	vim.api.nvim_win_set_buf(win, history[new_index])
+	vim.cmd("edit " .. history[new_index])
 	self.paused = false
 end
 

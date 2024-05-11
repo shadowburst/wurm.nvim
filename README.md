@@ -1,6 +1,6 @@
 # wurm.nvim
 
-`wurm.nvim` is a plugin that allows you to navigate your buffers logically.
+Worm your way through your **M**ost **R**ecent **U**sed files, going forwards and backwards through history.
 
 ## ⚡️ Requirements
 
@@ -10,7 +10,7 @@
 
 Install the plugin with your preferred package manager:
 
-### [lazy.nvim](https://github.com/folke/lazy.nvim)
+Using [lazy.nvim][lazy] :
 
 ```lua
 {
@@ -34,4 +34,29 @@ Install the plugin with your preferred package manager:
 
 ## ⚙️ Configuration
 
-There aren't any options for this plugin yet. I'm open to suggestions for new features.
+<details>
+
+<summary>Default Settings</summary>
+
+<!-- config:start -->
+
+```lua
+{
+    -- Number of files to remember
+    max_history = 15
+    -- Remove closed buffers from history
+    forget_closed = true
+}
+```
+
+<!-- config:end -->
+
+</details>
+
+## 📦 Similar Plugins / Inspiration
+
+- [vim-buffer-history][vim-buffer-history]: design concepts
+- [lazy.nvim][lazy]: pretty `README`s
+
+[lazy]: https://github.com/folke/lazy.nvim
+[vim-buffer-history]: https://github.com/dhruvasagar/vim-buffer-history

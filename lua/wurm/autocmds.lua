@@ -12,31 +12,37 @@ function M.setup()
 		group = augroup("push_to_history"),
 		pattern = { "*" },
 		callback = function()
+			local file = vim.fn.expand("<afile>")
+
 			-- Only execute in files
-			if vim.fn.expand("<afile>") == "" or vim.bo.filetype == "" then
+			if file == "" or vim.bo.filetype == "" then
 				return
 			end
 
 			local win = vim.api.nvim_get_current_win()
 
-			require("wurm.history"):push(win, tonumber(vim.fn.expand("<abuf>")) or 0)
+			require("wurm.history"):push(win, file)
 		end,
 	})
 
-	vim.api.nvim_create_autocmd("BufWipeout", {
-		group = augroup("remove_from_history"),
-		pattern = { "*" },
-		callback = function()
-			-- Only execute in files
-			if vim.fn.expand("<afile>") == "" or vim.bo.filetype == "" then
-				return
-			end
+	if opts.forget_closed then
+		vim.api.nvim_create_autocmd("BufWipeout", {
+			group = augroup("remove_from_history"),
+			pattern = { "*" },
+			callback = function()
+				local file = vim.fn.expand("<afile>")
 
-			local win = vim.api.nvim_get_current_win()
+				-- Only execute in files
+				if file == "" or vim.bo.filetype == "" then
+					return
+				end
 
-			require("wurm.history"):remove(win, tonumber(vim.fn.expand("<abuf>")) or 0)
-		end,
-	})
+				local win = vim.api.nvim_get_current_win()
+
+				require("wurm.history"):remove(win, file)
+			end,
+		})
+	end
 end
 
 return M
