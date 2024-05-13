@@ -1,91 +1,85 @@
----@class wurm.Config
-local Config = require("wurm.config").options
+---@type wurm.Config
+local Config = require("wurm").config
 local Utils = require("wurm.utils")
 
 ---@class wurm.History
+---@field files string[]
 ---@field paused boolean
----@field files table
 local M = {
-	paused = false,
 	files = {},
+	paused = false,
 }
 
----@param win integer
+---@return wurm.History
+function M.new()
+	return setmetatable({
+		files = {},
+		paused = false,
+	}, { __index = M })
+end
+
 ---@param file string filepath relative to the cwd
-function M:push(win, file)
+function M:append(file)
 	if self.paused then
 		return
 	end
 
-	local history = vim.tbl_filter(function(f)
+	self.files = vim.tbl_filter(function(f)
 		return f ~= file
-	end, self.files[win] or {})
+	end, self.files or {})
 
-	table.insert(history, file)
+	table.insert(self.files, file)
 
-	if #history > Config.max_history then
-		table.remove(history, 1)
+	if #self.files > Config.max_history then
+		table.remove(self.files, 1)
 	end
-
-	self.files[win] = history
 end
 
----@param win integer
 ---@param file string filepath relative to the cwd
-function M:remove(win, file)
-	self.files[win] = vim.tbl_filter(function(f)
+function M:remove(file)
+	self.files = vim.tbl_filter(function(f)
 		return f ~= file
-	end, self.files[win] or {})
+	end, self.files or {})
 end
 
----@param win? integer
-function M:clear(win)
-	if win == nil then
-		self.files = {}
-	else
-		self.files[win] = nil
-	end
+function M:clear()
+	self.files = {}
 end
 
----@param win integer
----@param direction integer
-function M:navigate(win, direction)
-	local history = self.files[win] or {}
-
-	if #history == 0 then
+---@param offset integer
+function M:navigate(offset)
+	if #self.files == 0 then
 		return
 	end
 
-	local file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win)), ":.")
+	local file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":.")
 
-	local index = Utils.tbl_index(file, history)
+	local index = Utils.tbl_index(file, self.files)
 
 	if index == nil then
 		return
 	end
 
-	local new_index = index + direction
+	local new_index = index + offset
 	if new_index < 1 then
-		new_index = #history
-	elseif new_index > #history then
-		new_index = 1
+		new_index = #self.files + new_index -- wrap to the end of list, accounting for the offset
+	elseif new_index > #self.files then
+		new_index = new_index - #self.files -- wrap to the start of list, accounting for the offset
 	end
 
 	self.paused = true
-	vim.cmd("edit " .. history[new_index])
+	vim.cmd("edit " .. self.files[new_index])
 	self.paused = false
 end
 
----@param win integer
----@param direction integer?
-function M:prev(win, direction)
-	self:navigate(win, -(math.max(direction or 1, 1)))
+---@param offset integer?
+function M:prev(offset)
+	self:navigate(-(math.max(offset or 1, 1)))
 end
 
----@param win integer
----@param direction integer?
-function M:next(win, direction)
-	self:navigate(win, math.max(direction or 1, 1))
+---@param offset integer?
+function M:next(offset)
+	self:navigate(math.max(offset or 1, 1))
 end
 
 return M

@@ -12,9 +12,10 @@ local defaults = {
 ---@field max_history number?
 ---@field forget_closed boolean?
 
----@param opts wurm.PartialConfig
-function M.setup(opts)
-	M.options = vim.tbl_deep_extend("force", defaults, opts or {})
+---@param opts wurm.PartialConfig?
+---@return wurm.Config
+function M.create_config(opts)
+	return vim.tbl_deep_extend("force", defaults, opts or {})
 end
 
 return M
